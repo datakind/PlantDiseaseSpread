@@ -18,91 +18,94 @@ from skimage import measure
 from skimage import morphology
 from collections import Counter
 import operator
-from scipy import ndimage
+from scipy import ndimage as ndi
 from skimage import io
 
 lowClip = 10 # Percent of original image
 highClip = 30
 
 #%%
-im = io.imread("../Data/17/43375-17.png", as_grey=True)
+filename = "../Data/17/43375-17.png" # Strong
+#filename = "../Data/17/43396-17.png" # Strong
+#filename = "../Data/17/43377-17.png" # Medium
+#filename = "../Data/17/43466-17.png" # None
+#filename = "../Data/17/43479-17.png" # None
+#filename = "../Data/17/43487-17.png" # None
+
+im = io.imread(filename, as_grey=True)
+im2 = io.imread(filename)
 imarr = np.asarray(im)
-#edge_robe = feature.canny(imarr)
 edge_canny = feature.canny(imarr, sigma=1.5)
-plt.imshow(imarr, cmap="Greys")
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,10)) #sharey=False)
+ax1.imshow(im2, cmap="Greys")
+ax1.set_xticks([])
+ax1.set_yticks([])
+ax2.imshow(edge_canny, cmap="Greys")
+ax2.set_xticks([])
+ax2.set_yticks([])
 
 #%%
-plt.imshow(edge_canny, cmap='Greys') #,  interpolation='nearest') #tight_layout()
-
-#%%
-plt.figure(figsize=(9,9))
 dilat2 = morphology.binary_dilation(edge_canny)
 dilat = morphology.binary_dilation(dilat2)
-plt.imshow(dilat)
 
 #%%
 mask=(dilat==0)*1
-plt.imshow(mask)
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,10)) #sharey=False)
+ax1.imshow(edge_canny, cmap="Greys")
+ax2.imshow(mask, cmap="Greys")
+#plt.imshow(mask,)
 
 #%%
 label_image = measure.label(mask)
-plt.imshow(-label_image)
-plt.colorbar()
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,10)) #sharey=False)
+ax1.imshow(mask, cmap="Greys")
+ax2.imshow(label_image)
 
 #%%
 pix = label_image.ravel()
-
-#%%
 rgns = Counter(pix)
 sorted_rgns = np.asarray(sorted(rgns.items(), key=operator.itemgetter(1)))
-
-#%%
 lowerLimit = (lowClip/100)**2.0*np.shape(imarr)[0]*np.shape(imarr)[1]
 upperLimit = (highClip/100)**2.0*np.shape(imarr)[0]*np.shape(imarr)[1]
 mask2 = ((sorted_rgns[:,1] > lowerLimit) & (sorted_rgns[:,1] < upperLimit))
 zones = sorted_rgns[mask2][:,0]
     
 #%%
-#def get_obj(arr):
-#    new=[]
-#    for i in range(len(arr)):
-#        strx=str(i)
-#        new.append(strx[5::])
-#    return new
-
-
-maskred = imarr
-maskred[:] = 0
-maskgreen = maskred
+maskred = np.zeros_like(imarr)
+maskgreen = np.zeros_like(imarr)
 
 for z in zones:        
-    chk2 = (label_image==z)*1
-    bboxes = ndimage.measurements.find_objects(chk2)
-    #lims = get_obj(bboxes)
-    chk3 = chk2[bboxes[0][0].start:bboxes[0][0].stop, bboxes[0][1].start:bboxes[0][1].stop]
-    chk3pad = np.lib.pad(chk3,(1,1),'constant',constant_values=0)
-    edgeIm = sobel(chk3pad.astype('float64'))
-    edgeIm[edgeIm > 0] = 1
-#    plt.figure(figsize=(7,7))
-    imarr2 = imarr
-    if(sum(sum(edgeIm))/(2*(sum(np.asarray(np.shape(chk3))))) > 2.1): 
-        print("HERE!!")
-        maskred[chk2==1]=1
-    else:
-        maskgreen[chk2==1]=1
-    plt.figure()
-    plt.imshow(maskgreen)
-    plt.show()
-        
-#plt.imshow(imarr2, cmap="Greys")
-#plt.imshow(maskgreen)
-#plt.show()
-
-#    plt.imshow(edgeIm)
-##    plt.imshow(chk3)
+    zone = (label_image==z)*1
+    bboxes = ndi.measurements.find_objects(zone)
+    zoneCropHoles = zone[bboxes[0][0].start:bboxes[0][0].stop, bboxes[0][1].start:bboxes[0][1].stop]
+    zoneCrop = ndi.binary_fill_holes(zoneCropHoles)
+#    plt.figure(figsize=(6,6))
+#    plt.imshow(zoneCrop)
+#    plt.colorbar()
 #    plt.show()
-#    print(sum(sum(edgeIm))/np.prod(np.asarray(np.shape(chk3))))
-#    print(sum(sum(edgeIm))/(2*(sum(np.asarray(np.shape(chk3))))))  
-
-
-    
+    zoneCroppad = np.lib.pad(zoneCrop,(1,1),'constant',constant_values=0)
+    edgeIm = sobel(zoneCroppad.astype('float64'))
+    edgeIm[edgeIm > 0.01] = 1
+    if(sum(sum(edgeIm))/(2*(sum(np.asarray(np.shape(zoneCrop))))) > 4 \
+        or max(np.shape(zoneCrop))/min(np.shape(zoneCrop)) > 4): 
+        maskred[zone==1]=1
+    else:
+        maskgreen[zone==1]=1
+#    f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+#    ax1.imshow(maskgreen, cmap="Greys")
+#    ax2.imshow(maskred, cmap="Greys")
+#    plt.show()
+        
+#%%      
+gmasked = np.ma.masked_where(maskgreen < 0.9, maskgreen)
+rmasked = np.ma.masked_where(maskred < 0.9, maskred)
+plt.figure(figsize=(6,6))
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,10)) #sharey=False)
+ax1.imshow(im2)
+ax1.set_xticks([])
+ax1.set_yticks([])
+ax2.imshow(imarr, cmap="Greys")
+ax2.imshow(gmasked, alpha=0.5, cmap="PRGn_r")
+ax2.imshow(rmasked, alpha=0.5, cmap="RdYlBu")
+plt.gca().set_xticks([])
+plt.gca().set_yticks([])
