@@ -2,14 +2,15 @@
 Calculates metrics regarding the distance between rust infections
 in one year and the next.
 
-Tasks:
-TODO: exclude points with no samples at all within radius N?
+User must update the RustSurvey.csv file path efore running.
+
+TODO: exclude points with no samples at all within radius N
 TODO: # next year infections within radius N
-TODO: multiple lines, one plot
 """
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from geopy.distance import great_circle
 from copy import deepcopy
 
@@ -38,6 +39,9 @@ def get_dists_for_yr(year, filter_col):
 
 
 def unpack(lst):
+    """
+    Unpacks the first item of the list, if it exists
+    """
     try:
         return lst[0]
     except:
@@ -46,7 +50,8 @@ def unpack(lst):
 
 def get_med_dist_to_next_infection(rust_nm):
     df.dropna(subset=['coords'], inplace=True)
-    yrs_to_scan = sorted(df.ObsYear.unique())[:-1]
+    # ignore 2015 as 2016 has very limited data to scan forward to
+    yrs_to_scan = [i for i in xrange(2007, 2015)]
     dists = {year: get_dists_for_yr(year, rust_nm+'.Binary')
              for year in yrs_to_scan}
     for yr in dists:
@@ -63,9 +68,27 @@ if __name__ == '__main__':
     survey_nm = "/Users/sohier/Desktop/Gates_Plant_Rust/RustSurvey.csv"
     survey = pd.read_csv(survey_nm)
     df = survey
+    df.drop_duplicates(subset=['ObsDate', 'Latitude', 'Longitude'],
+                       inplace=True)
     df['StemOrYellowBinary'] = df['StemRust.Binary'] | df['YellowRust.Binary']
     df['ObsDate'] = pd.to_datetime(df.ObsDate)
     df['ObsMonth'] = df['ObsDate'].apply(lambda x: x.month)
     df['coords'] = df[['Latitude', 'Longitude']].apply(tuple, axis=1)
-    stem_dists = get_med_dist_to_next_infection('StemRust')
-    yellow_dists = get_med_dist_to_next_infection('YellowRust')
+    stem_rust_dists = get_med_dist_to_next_infection('StemRust')
+    yellow_rust_dists = get_med_dist_to_next_infection('YellowRust')
+
+    plt.plot([float(i)/len(stem_rust_dists) for i in xrange(len(stem_rust_dists))],
+             sorted(stem_rust_dists))
+    plt.ylabel('Miles to Nearest Infection In Following Year')
+    plt.xlabel('Occurrence Percentile')
+    plt.axhline(y=10)
+    plt.title('Stem Rust Infections With Follow Up Infections Within Walking Distance')
+    plt.show()
+
+    plt.plot([float(i)/len(stem_rust_dists) for i in xrange(len(yellow_rust_dists))],
+             sorted(yellow_rust_dists))
+    plt.ylabel('Miles to Nearest Infection In Following Year')
+    plt.xlabel('Occurrence Percentile')
+    plt.axhline(y=10)
+    plt.title('Yellow Rust Infections With Follow Up Infections Within Walking Distance')
+    plt.show()
