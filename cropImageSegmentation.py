@@ -4,7 +4,7 @@ Created on Sat Aug 27 17:18:01 2016
 
 @author: colinheye
 """
- 
+
 # import the necessary packages
 import numpy as np
 import argparse
@@ -19,16 +19,17 @@ from skimage import morphology
 from collections import Counter
 import operator
 from scipy import ndimage
+from skimage import io
 
 lowClip = 10 # Percent of original image
 highClip = 30
 
 #%%
-im = Image.open("../Data/17/43375-17.png")
+im = io.imread("../Data/17/43375-17.png", as_grey=True)
 imarr = np.asarray(im)
 #edge_robe = feature.canny(imarr)
-edge_canny = feature.canny(imarr, sigma=2.0)
-
+edge_canny = feature.canny(imarr, sigma=1.5)
+plt.imshow(imarr, cmap="Greys")
 
 #%%
 plt.imshow(edge_canny, cmap='Greys') #,  interpolation='nearest') #tight_layout()
@@ -69,6 +70,11 @@ zones = sorted_rgns[mask2][:,0]
 #        new.append(strx[5::])
 #    return new
 
+
+maskred = imarr
+maskred[:] = 0
+maskgreen = maskred
+
 for z in zones:        
     chk2 = (label_image==z)*1
     bboxes = ndimage.measurements.find_objects(chk2)
@@ -77,11 +83,26 @@ for z in zones:
     chk3pad = np.lib.pad(chk3,(1,1),'constant',constant_values=0)
     edgeIm = sobel(chk3pad.astype('float64'))
     edgeIm[edgeIm > 0] = 1
-    plt.figure(figsize=(7,7))
-    plt.imshow(edgeIm)
-#    plt.imshow(chk3)
+#    plt.figure(figsize=(7,7))
+    imarr2 = imarr
+    if(sum(sum(edgeIm))/(2*(sum(np.asarray(np.shape(chk3))))) > 2.1): 
+        print("HERE!!")
+        maskred[chk2==1]=1
+    else:
+        maskgreen[chk2==1]=1
+    plt.figure()
+    plt.imshow(maskgreen)
     plt.show()
-    print(sum(sum(edgeIm))/np.prod(np.asarray(np.shape(chk3))))
-    print(sum(sum(edgeIm))/(2*(sum(np.asarray(np.shape(chk3))))))
-    
+        
+#plt.imshow(imarr2, cmap="Greys")
+#plt.imshow(maskgreen)
+#plt.show()
+
+#    plt.imshow(edgeIm)
+##    plt.imshow(chk3)
+#    plt.show()
+#    print(sum(sum(edgeIm))/np.prod(np.asarray(np.shape(chk3))))
+#    print(sum(sum(edgeIm))/(2*(sum(np.asarray(np.shape(chk3))))))  
+
+
     
