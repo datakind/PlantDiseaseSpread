@@ -1,0 +1,65 @@
+GitHub HelpVersion 
+Contact Support
+Return to GitHub
+Visualizing repository data with graphs / Listing the packages that a repository depends on
+ 
+How can we help?
+
+Listing the packages that a repository depends on
+You can see your project's dependencies, as well as any detected vulnerabilities, in the dependency graph.
+
+The dependency graph is available for every public repository. Repository administrators can also set up the dependency graph for private repositories.
+
+Tip: You can view and update vulnerable dependencies in your repository's dependency graph. The dependency graph lists vulnerable dependencies before other dependencies. For more information, see "About security alerts for vulnerable dependencies."
+
+To enable the dependency graph for your project, your repository must define dependencies in a supported language using a supported file format.
+
+Supported languages for dependencies and vulnerabilities detection	Recommended file formats	Supported file formats
+Java	pom.xml	pom.xml
+JavaScript	package-lock.json	package-lock.json, package.json
+.NET	.csproj, .vbproj, .nuspec	.csproj, .vbproj, .nuspec
+Python	requirements.txt, pipfile.lock	requirements.txt, pipfile.lock
+Ruby	Gemfile.lock	Gemfile.lock,Gemfile, *.gemspec
+Note: If you list your Python dependencies within a setup.py file, we may not be able to parse, list, and alert on every dependency in your project.
+
+Listing dependencies for a repository with the dependency graph enabled
+On GitHub, navigate to the main page of the repository.
+
+Insights tab in the main repository navigation barUnder your repository name, click  Insights.
+
+Dependency graph tab in the left sidebarIn the left sidebar, click Dependency graph.
+
+Enabling the dependency graph for a private repository
+On GitHub, navigate to the main page of the repository.
+
+Insights tab in the main repository navigation barUnder your repository name, click  Insights.
+
+Dependency graph tab in the left sidebarIn the left sidebar, click Dependency graph.
+
+Button to allow access to repository data to enable the dependency graphRead the message about the granting GitHub access to repository data to enable the dependency graph, then click Allow access.
+
+For more information, see "Understanding how GitHub uses and protects your data."
+
+Disabling the dependency graph for a private repository
+On GitHub, navigate to the main page of the repository.
+
+Repository settings buttonUnder your repository name, click  Settings.
+
+Checkbox for disabling the dependency graphUnder "Data services," unselect Dependency graph.
+
+To opt out of data use for your repository, see "Opting into or out of data use for your private repository."
+
+Troubleshooting the dependency graph
+If your project has dependencies, but no dependencies are detected in your graph, there may be a problem with the file containing your dependencies. Check your project's file to ensure that it's correctly formatted for the file type.
+
+Further reading
+"Listing the projects that depend on a repository"
+"Understanding how GitHub uses and protects your data"
+"Viewing and updating vulnerable dependencies in your repository"
+Article versions
+GitHub.com
+GitHub Enterprise Server 2.16
+GitHub Enterprise Server 2.15
+GitHub Enterprise Server 2.14
+GitHub Enterprise Server 2.13
+The GitHub Logo © 2019 GitHub Inc. All rights reserved. Terms of ServicePrivacySecurity Support
